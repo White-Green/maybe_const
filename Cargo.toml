@@ -1,0 +1,37 @@
+[package]
+name = "partial_const"
+version = "0.1.0"
+authors = ["White-Green <43771790+White-Green@users.noreply.github.com>"]
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/White-Green/partial_const"
+readme = "README.md"
+categories = ["data-structures", "no-std"]
+keywords = ["const", "const_generics"]
+description = "This library provides a way to handle constant and non-constant values in a unified way."
+
+#[badges]
+#github = { repository = "White-Green/maybe_const", workflow = "Rust" }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rustversion = "1.0.4"
+
+[features]
+default = ["usize", "isize", "i8", "i16", "i32", "i64", "i128", "u8", "u16", "u32", "u64", "u128", "char", "bool"]
+incomplete = []
+usize = []
+isize = []
+i8 = []
+i16 = []
+i32 = []
+i64 = []
+i128 = []
+u8 = []
+u16 = []
+u32 = []
+u64 = []
+u128 = []
+char = []
+bool = []
