@@ -19,6 +19,7 @@ macro_rules! impl_min {
 
         impl<const VALUE: $t> crate::MayBeConstAT for Const<VALUE> {
             type Type = $t;
+            const IS_CONST: bool = true;
             #[inline(always)]
             fn value(&self) -> $t {
                 VALUE
@@ -59,6 +60,11 @@ macro_rules! impl_min {
                 test::<Const<{0 as $t}>, $t>();
                 test::<$t, Const<{0 as $t}>>();
                 // test::<Const<{1 as $t}>, Const<{0 as $t}>>(); // <-Compile Error!
+            }
+
+            #[test]
+            fn test_is_const() {
+                assert!(<Const<{0 as $t}> as crate::MayBeConstAT>::IS_CONST);
             }
 
             #[test]

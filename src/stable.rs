@@ -19,6 +19,7 @@ pub trait MayBeConst<T>: MayBeConstAT<Type=T> {}
 /// A trait [MayBeConst] by associated type for internal trait bounds.
 pub trait MayBeConstAT: Sized + Clone + Copy + Default + core::fmt::Debug + core::fmt::Display {
     type Type: MayBeConstAT<Type=Self::Type>;
+    const IS_CONST: bool;
     fn value(&self) -> Self::Type;
 }
 
@@ -50,6 +51,7 @@ macro_rules! impl_stable {
     ($t:tt) => {
         impl crate::MayBeConstAT for $t {
             type Type = $t;
+            const IS_CONST: bool = false;
             #[inline(always)]
             fn value(&self) -> $t {
                 *self
@@ -64,6 +66,11 @@ macro_rules! impl_stable {
             fn test_equals() {
                 fn test<A: crate::MayBeConst<$t>, B: crate::MayBeConst<$t>>() where A: crate::Equals<B> {}
                 test::<$t, $t>();
+            }
+
+            #[test]
+            fn test_is_const() {
+                assert!(!<$t as crate::MayBeConstAT>::IS_CONST);
             }
         }
     }

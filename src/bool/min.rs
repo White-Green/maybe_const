@@ -16,6 +16,7 @@ impl<const VALUE: bool> core::fmt::Display for Const<VALUE> {
 
 impl<const VALUE: bool> crate::MayBeConstAT for Const<VALUE> {
     type Type = bool;
+    const IS_CONST: bool = true;
     #[inline(always)]
     fn value(&self) -> bool {
         VALUE
@@ -63,6 +64,11 @@ mod test_nightly {
         test::<Const<false>, bool>();
         test::<bool, Const<false>>();
         // test::<Const<{1 as bool}>, Const<{0 as bool}>>(); // <-Compile Error!
+    }
+
+    #[test]
+    fn test_is_const() {
+        assert!(<Const<false> as crate::MayBeConstAT>::IS_CONST);
     }
 
     #[test]
