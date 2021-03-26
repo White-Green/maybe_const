@@ -14,9 +14,15 @@
 /// # #[cfg(feature = "usize")] #[rustversion::not(since(1.51))] fn test(){}
 /// # test();
 /// ```
-pub trait MayBeConst<T>: Sized + Clone + Copy + Default + core::fmt::Debug + core::fmt::Display + core::cmp::PartialEq<T> + core::cmp::PartialOrd<T> {
-    fn value(&self) -> T;
+pub trait MayBeConst<T>: MayBeConstAT<Type=T> {}
+
+/// A trait [MayBeConst] by associated type for internal trait bounds.
+pub trait MayBeConstAT: Sized + Clone + Copy + Default + core::fmt::Debug + core::fmt::Display {
+    type Type: MayBeConstAT<Type=Self::Type>;
+    fn value(&self) -> Self::Type;
 }
+
+impl<T: MayBeConstAT> MayBeConst<T::Type> for T {}
 
 /// A trait for putting equality constraints on constants.
 /// It will be implemented if the constants are equal.
@@ -38,11 +44,12 @@ pub trait MayBeConst<T>: Sized + Clone + Copy + Default + core::fmt::Debug + cor
 /// # #[cfg(feature = "u8")] #[rustversion::not(since(1.51))] fn test(){}
 /// # test();
 /// ```
-pub trait Equals<T> {}
+pub trait Equals<T: MayBeConstAT>: MayBeConstAT<Type=T::Type> {}
 
 macro_rules! impl_stable {
     ($t:tt) => {
-        impl crate::MayBeConst<$t> for $t {
+        impl crate::MayBeConstAT for $t {
+            type Type = $t;
             #[inline(always)]
             fn value(&self) -> $t {
                 *self

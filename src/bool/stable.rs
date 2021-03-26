@@ -1,4 +1,5 @@
-impl crate::MayBeConst<bool> for bool {
+impl crate::MayBeConstAT for bool {
+    type Type = bool;
     #[inline(always)]
     fn value(&self) -> bool {
         *self

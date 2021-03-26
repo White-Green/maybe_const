@@ -14,7 +14,8 @@ impl<const VALUE: bool> core::fmt::Display for Const<VALUE> {
     }
 }
 
-impl<const VALUE: bool> crate::MayBeConst<bool> for Const<VALUE> {
+impl<const VALUE: bool> crate::MayBeConstAT for Const<VALUE> {
+    type Type = bool;
     #[inline(always)]
     fn value(&self) -> bool {
         VALUE

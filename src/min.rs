@@ -17,7 +17,8 @@ macro_rules! impl_min {
             }
         }
 
-        impl<const VALUE: $t> crate::MayBeConst<$t> for Const<VALUE> {
+        impl<const VALUE: $t> crate::MayBeConstAT for Const<VALUE> {
+            type Type = $t;
             #[inline(always)]
             fn value(&self) -> $t {
                 VALUE
