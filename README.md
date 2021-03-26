@@ -8,7 +8,7 @@ This library takes both flexibilities to take dynamic values and (partial) param
 fn maybe_one<T: partial_const::MayBeConst<i32>>(i: T) -> bool
     where T: partial_const::Equals<partial_const::ConstI32<1>> {
 //  where T: partial_const::Equals<partial_const::i32::Const<1>> { <- Alternative
-    i == 1i32
+    i.value() == 1i32
 }
 
 assert!(maybe_one(partial_const::ConstI32::<1>::new()));
