@@ -45,7 +45,41 @@ impl<T: MayBeConstAT> MayBeConst<T::Type> for T {}
 /// # #[cfg(feature = "u8")] #[rustversion::not(since(1.51))] fn test(){}
 /// # test();
 /// ```
-pub trait Equals<T: MayBeConstAT>: MayBeConstAT<Type=T::Type> {}
+pub trait Equals<T: MayBeConstAT>: MayBeConstAT<Type=T::Type> {
+    /// The const side of two types.
+    /// # Example
+    /// ```
+    /// # #[cfg(feature = "u16")] #[rustversion::since(1.51)] fn test() {
+    /// assert_eq!(<partial_const::ConstU16<0> as partial_const::Equals<partial_const::ConstU16<0>>>::ConstSide::default(), partial_const::ConstU16::<0>::new());
+    /// assert_eq!(<partial_const::ConstU16<0> as partial_const::Equals<u16>>::ConstSide::default(), partial_const::ConstU16::<0>::new());
+    /// assert_eq!(<u16 as partial_const::Equals<partial_const::ConstU16<0>>>::ConstSide::default(), partial_const::ConstU16::<0>::new());
+    /// assert_eq!(<u16 as partial_const::Equals<u16>>::ConstSide::default(), 0_u16);
+    /// # }
+    /// # #[cfg(not(feature = "u16"))] fn test(){}
+    /// # #[cfg(feature = "u16")] #[rustversion::not(since(1.51))] fn test(){}
+    /// # test();
+    /// ```
+    type ConstSide: MayBeConst<T::Type>;
+    /// Return the const side value of two values if two values are equal.
+    /// # Example
+    /// ```
+    /// # #[cfg(feature = "u32")] #[rustversion::since(1.51)] fn test() {
+    /// # use partial_const::{Equals,ConstU32};
+    /// assert_eq!(ConstU32::<0>::new().get_const_side(&ConstU32::<0>::new()), Some(ConstU32::<0>::new()));
+    /// assert_eq!(ConstU32::<0>::new().get_const_side(&0_u32), Some(ConstU32::<0>::new()));
+    /// assert_eq!(0_u32.get_const_side(&ConstU32::<0>::new()), Some(ConstU32::<0>::new()));
+    /// assert_eq!(0_u32.get_const_side(&0_u32), Some(0_u32));
+    ///
+    /// assert_eq!(ConstU32::<0>::new().get_const_side(&1_u32), None);
+    /// assert_eq!(1_u32.get_const_side(&ConstU32::<0>::new()), None);
+    /// assert_eq!(0_u32.get_const_side(&1_u32), None);
+    /// # }
+    /// # #[cfg(not(feature = "u32"))] fn test(){}
+    /// # #[cfg(feature = "u32")] #[rustversion::not(since(1.51))] fn test(){}
+    /// # test();
+    /// ```
+    fn get_const_side(&self, rhs: &T) -> Option<Self::ConstSide>;
+}
 
 macro_rules! impl_stable {
     ($t:tt) => {
@@ -58,7 +92,16 @@ macro_rules! impl_stable {
             }
         }
 
-        impl crate::Equals<$t> for $t {}
+        impl crate::Equals<$t> for $t {
+            type ConstSide = $t;
+            fn get_const_side(&self, rhs: &$t) -> Option<Self::ConstSide> {
+                if *self == *rhs {
+                    Some(*self)
+                } else {
+                    None
+                }
+            }
+        }
 
         #[cfg(test)]
         mod test_stable {

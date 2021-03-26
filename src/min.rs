@@ -26,9 +26,35 @@ macro_rules! impl_min {
             }
         }
 
-        impl<const VALUE: $t> crate::Equals<Const<VALUE>> for Const<VALUE> {}
-        impl<const VALUE: $t> crate::Equals<$t> for Const<VALUE> {}
-        impl<const VALUE: $t> crate::Equals<Const<VALUE>> for $t {}
+        impl<const VALUE: $t> crate::Equals<Const<VALUE>> for Const<VALUE> {
+            type ConstSide = Const<VALUE>;
+            #[inline(always)]
+            fn get_const_side(&self, _: &Const<VALUE>) -> Option<Self::ConstSide> {
+                Some(*self)
+            }
+        }
+        impl<const VALUE: $t> crate::Equals<$t> for Const<VALUE> {
+            type ConstSide = Const<VALUE>;
+            #[inline(always)]
+            fn get_const_side(&self, rhs: &$t) -> Option<Self::ConstSide> {
+                if *self == *rhs {
+                    Some(*self)
+                } else {
+                    None
+                }
+            }
+        }
+        impl<const VALUE: $t> crate::Equals<Const<VALUE>> for $t {
+            type ConstSide = Const<VALUE>;
+            #[inline(always)]
+            fn get_const_side(&self, rhs: &Const<VALUE>) -> Option<Self::ConstSide> {
+                if *self == *rhs {
+                    Some(*rhs)
+                } else {
+                    None
+                }
+            }
+        }
 
         impl<const VALUE1: $t, const VALUE2: $t> core::cmp::PartialEq<Const<VALUE2>> for Const<VALUE1> {
             fn eq(&self, _: &Const<VALUE2>) -> bool { VALUE1 == VALUE2 }
@@ -60,6 +86,27 @@ macro_rules! impl_min {
                 test::<Const<{0 as $t}>, $t>();
                 test::<$t, Const<{0 as $t}>>();
                 // test::<Const<{1 as $t}>, Const<{0 as $t}>>(); // <-Compile Error!
+            }
+
+            #[test]
+            fn test_equals_result_const() {
+                fn const_side_is_const<A: crate::MayBeConst<$t>, B: crate::MayBeConst<$t>>() ->bool where A: crate::Equals<B> {
+                    <<A as crate::Equals<B>>::ConstSide as crate::MayBeConstAT>::IS_CONST
+                }
+                assert!(const_side_is_const::<Const<{0 as $t}>, Const<{0 as $t}>>());
+                assert!(const_side_is_const::<Const<{0 as $t}>, $t>());
+                assert!(const_side_is_const::<$t, Const<{0 as $t}>>());
+
+                use crate::Equals;
+                assert_eq!(Const::<{0 as $t}>::new().get_const_side(&Const::<{0 as $t}>::new()), Some(Const::<{0 as $t}>::new()));
+                assert_eq!(Const::<{0 as $t}>::new().get_const_side(&{0 as $t}), Some(Const::<{0 as $t}>::new()));
+                assert_eq!({0 as $t}.get_const_side(&Const::<{0 as $t}>::new()), Some(Const::<{0 as $t}>::new()));
+                assert_eq!({0 as $t}.get_const_side(&{0 as $t}), Some(0 as $t));
+
+                // assert_eq!(Const::<{1 as $t}>::new().get_const_side(&Const::<{0 as $t}>::new()), None); // <-Compile Error!
+                assert_eq!(Const::<{1 as $t}>::new().get_const_side(&{0 as $t}), None);
+                assert_eq!({1 as $t}.get_const_side(&Const::<{0 as $t}>::new()), None);
+                assert_eq!({1 as $t}.get_const_side(&{0 as $t}), None);
             }
 
             #[test]

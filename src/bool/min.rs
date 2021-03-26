@@ -23,11 +23,37 @@ impl<const VALUE: bool> crate::MayBeConstAT for Const<VALUE> {
     }
 }
 
-impl<const VALUE: bool> crate::Equals<Const<VALUE>> for Const<VALUE> {}
+impl<const VALUE: bool> crate::Equals<Const<VALUE>> for Const<VALUE> {
+    type ConstSide = Const<VALUE>;
+    #[inline(always)]
+    fn get_const_side(&self, _: &Const<VALUE>) -> Option<Self::ConstSide> {
+        Some(*self)
+    }
+}
 
-impl<const VALUE: bool> crate::Equals<bool> for Const<VALUE> {}
+impl<const VALUE: bool> crate::Equals<bool> for Const<VALUE> {
+    type ConstSide = Const<VALUE>;
+    #[inline(always)]
+    fn get_const_side(&self, rhs: &bool) -> Option<Self::ConstSide> {
+        if *self == *rhs {
+            Some(*self)
+        } else {
+            None
+        }
+    }
+}
 
-impl<const VALUE: bool> crate::Equals<Const<VALUE>> for bool {}
+impl<const VALUE: bool> crate::Equals<Const<VALUE>> for bool {
+    type ConstSide = Const<VALUE>;
+    #[inline(always)]
+    fn get_const_side(&self, rhs: &Const<VALUE>) -> Option<Self::ConstSide> {
+        if *self == *rhs {
+            Some(*rhs)
+        } else {
+            None
+        }
+    }
+}
 
 impl<const VALUE1: bool, const VALUE2: bool> core::cmp::PartialEq<Const<VALUE2>> for Const<VALUE1> {
     fn eq(&self, _: &Const<VALUE2>) -> bool { VALUE1 == VALUE2 }
@@ -64,6 +90,27 @@ mod test_nightly {
         test::<Const<false>, bool>();
         test::<bool, Const<false>>();
         // test::<Const<{1 as bool}>, Const<{0 as bool}>>(); // <-Compile Error!
+    }
+
+    #[test]
+    fn test_equals_result_const() {
+        fn const_side_is_const<A: crate::MayBeConst<bool>, B: crate::MayBeConst<bool>>() -> bool where A: crate::Equals<B> {
+            <<A as crate::Equals<B>>::ConstSide as crate::MayBeConstAT>::IS_CONST
+        }
+        assert!(const_side_is_const::<Const<false>, Const<false>>());
+        assert!(const_side_is_const::<Const<false>, bool>());
+        assert!(const_side_is_const::<bool, Const<false>>());
+
+        use crate::Equals;
+        assert_eq!(Const::<false>::new().get_const_side(&Const::<false>::new()), Some(Const::<false>::new()));
+        assert_eq!(Const::<false>::new().get_const_side(&false), Some(Const::<false>::new()));
+        assert_eq!(false.get_const_side(&Const::<false>::new()), Some(Const::<false>::new()));
+        assert_eq!(false.get_const_side(&false), Some(false));
+
+        // assert_eq!(Const::<true>::new().get_const_side(&Const::<false>::new()), None); // <-Compile Error!
+        assert_eq!(Const::<true>::new().get_const_side(&false), None);
+        assert_eq!(true.get_const_side(&Const::<false>::new()), None);
+        assert_eq!(true.get_const_side(&false), None);
     }
 
     #[test]

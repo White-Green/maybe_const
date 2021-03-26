@@ -7,7 +7,16 @@ impl crate::MayBeConstAT for bool {
     }
 }
 
-impl crate::Equals<bool> for bool {}
+impl crate::Equals<bool> for bool {
+    type ConstSide = bool;
+    fn get_const_side(&self, rhs: &bool) -> Option<Self::ConstSide> {
+        if *self == *rhs {
+            Some(*self)
+        } else {
+            None
+        }
+    }
+}
 
 #[cfg(test)]
 mod test_stable {
